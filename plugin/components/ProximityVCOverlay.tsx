@@ -20,19 +20,30 @@ let positions: Record<string, UserPosition> = {};
 const Overlay: React.FC<OverlayProps> = ({ vcId, config }) => {
     const [users, setUsers] = useState<UserPosition[]>([]);
     const [selfId, setSelfId] = useState<string>("self"); // replace with Discord user ID
-    
-    useEffect(() => {
-        // Connect to WebRTC server
-        connectWebRTC(vcId, config, (remoteUsers: UserPosition[]) => {
-            positions = remoteUsers;
-            setUsers(Object.values(remoteUsers));
-        });
-    }, [vcId]);
+
+    // useEffect(() => {
+    //     let mounted = true;
+    //     connectWebRTC(vcId, config, (remoteUsers: UserPosition[]) => {
+    //         if (!mounted) return;
+    //         positions = remoteUsers;
+    //         setUsers(Object.values(remoteUsers));
+    //     });
+
+    //     return () => {
+    //         mounted = false;
+    //         // TODO: close WS and peers here
+    //     };
+    // }, []); // run once per component mount
+
+
+    // const handleDrag = (id: string, x: number, y: number) => {
+    //     positions[id] = { ...positions[id], x, y };
+    //     setUsers(Object.values(positions));
+    //     // sendPositionUpdate(positions[id]); // send to server
+    // };
 
     const handleDrag = (id: string, x: number, y: number) => {
-        positions[id] = { ...positions[id], x, y };
-        setUsers(Object.values(positions));
-        sendPositionUpdate(positions[id]); // send to server
+
     };
 
     return (
