@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { React, useState, useEffect } from "@webpack/common";
 import UserAvatar from "./UserAvatar";
 import { connectWebRTC, sendPositionUpdate } from "../webrtc/webrtcClient";
 

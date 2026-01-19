@@ -1,13 +1,13 @@
-import { Plugin } from "vencord";
+import { Plugins } from "Vencord";
 import ProximityVCOverlay from "./components/ProximityVCOverlay";
 
-export default class ProximityVCPlugin extends Plugin {
+export default class ProximityVCPlugin extends Pluginsa {
     name = "Proximity Voice Chat";
     description = "Spatial audio plugin using WebRTC for designated VC channels.";
     
     // Example configurable options
     config = {
-        proximityVCIds: ["00"], // Discord VC IDs to intercept
+        proximityVCIds: ["0"], // Discord VC IDs to intercept
         webrtcServerUrl: "ws://localhost:3000",
         maxDistance: 500,
     };
