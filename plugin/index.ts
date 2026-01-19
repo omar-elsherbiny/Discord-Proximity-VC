@@ -1,44 +1,61 @@
-import { Plugins } from "Vencord";
+import definePlugin, { StartAt } from "@utils/types";
+import { getModule } from "@utils/webpack";
 import ProximityVCOverlay from "./components/ProximityVCOverlay";
 
-export default class ProximityVCPlugin extends Pluginsa {
-    name = "Proximity Voice Chat";
-    description = "Spatial audio plugin using WebRTC for designated VC channels.";
-    
-    // Example configurable options
-    config = {
-        proximityVCIds: ["0"], // Discord VC IDs to intercept
+let originalJoinVC: any;
+
+export default definePlugin({
+    name: "Proximity Voice Chat",
+    description: "Spatial audio plugin using WebRTC for designated VC channels.",
+    authors: [{ name: "You", id: 0n }],
+    startAt: 0, // StartAt.Init
+
+    config: {
+        proximityVCIds: ["950013794665521175"],
         webrtcServerUrl: "ws://localhost:3000",
         maxDistance: 500,
-    };
+    },
 
-    onStart() {
+    start() {
         console.log("[ProximityVC] Plugin started");
         this.patchVCs();
-    }
+    },
 
-    onStop() {
+    stop() {
         console.log("[ProximityVC] Plugin stopped");
-        // Clean up UI / WebRTC
-    }
+
+        if (originalJoinVC && this.VoiceModule) {
+            this.VoiceModule.joinChannel = originalJoinVC;
+            originalJoinVC = undefined;
+        }
+    },
+
+    VoiceModule: null as any,
 
     patchVCs() {
-        // Hook into VC joining (simplified pseudocode)
-        // You would use Discord internal modules here to detect VC join
-        const originalJoinVC = window.DiscordModules.Voice.joinChannel;
-        window.DiscordModules.Voice.joinChannel = async (...args: any[]) => {
+        const Voice = getModule(["joinChannel", "leaveChannel"]);
+        if (!Voice) {
+            console.error("[ProximityVC] Could not find Voice module");
+            return;
+        }
+
+        this.VoiceModule = Voice;
+        originalJoinVC = Voice.joinChannel;
+
+        Voice.joinChannel = async (...args: any[]) => {
             const vcId = args[0];
             if (this.config.proximityVCIds.includes(vcId)) {
                 console.log(`[ProximityVC] Intercepting VC ${vcId}`);
                 this.showOverlay(vcId);
-                // Connect to WebRTC server instead of default VC audio
+                // TODO: Connect to WebRTC server
                 return;
             }
+
             return originalJoinVC(...args);
         };
-    }
+    },
 
     showOverlay(vcId: string) {
         ProximityVCOverlay.show(vcId, this.config);
     }
-}
+});
