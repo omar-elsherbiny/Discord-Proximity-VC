@@ -14,13 +14,14 @@ const VENCORD_PLUGIN_DEST = path.join(userDocs, 'Vencord', 'src', 'userplugins',
 async function copyPlugin() {
   try {
     await fs.copy(PLUGIN_SRC, VENCORD_PLUGIN_DEST, { overwrite: true });
-    console.log(`[Watcher] Plugin copied to ${VENCORD_PLUGIN_DEST} at ${new Date().toLocaleTimeString()}`);
+    console.log(`[Watcher] Plugin copied at ${new Date().toLocaleTimeString()}`);
   } catch (err) {
     console.error('[Watcher] Failed to copy plugin:', err);
   }
 }
 
 // Initial copy
+console.log(`[Watcher] Plugin copying to ${VENCORD_PLUGIN_DEST}`);
 copyPlugin();
 
 // Watch for changes

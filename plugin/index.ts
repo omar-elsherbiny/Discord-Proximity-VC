@@ -1,14 +1,11 @@
-import definePlugin, { StartAt } from "@utils/types";
-import { getModule } from "@utils/webpack";
+import definePlugin, { StartAt, webpackModules } from "@utils/types";
 import ProximityVCOverlay from "./components/ProximityVCOverlay";
-
-let originalJoinVC: any;
 
 export default definePlugin({
     name: "Proximity Voice Chat",
     description: "Spatial audio plugin using WebRTC for designated VC channels.",
     authors: [{ name: "You", id: 0n }],
-    startAt: 0, // StartAt.Init
+    startAt: StartAt.Init,
 
     config: {
         proximityVCIds: ["950013794665521175"],
@@ -17,45 +14,35 @@ export default definePlugin({
     },
 
     start() {
-        console.log("[ProximityVC] Plugin started");
-        this.patchVCs();
-    },
+        console.log("%c[ProximityVC]%c Plugin started", "color: green; font-weight: bold;", "");
 
-    stop() {
-        console.log("[ProximityVC] Plugin stopped");
-
-        if (originalJoinVC && this.VoiceModule) {
-            this.VoiceModule.joinChannel = originalJoinVC;
-            originalJoinVC = undefined;
-        }
-    },
-
-    VoiceModule: null as any,
-
-    patchVCs() {
-        const Voice = getModule(["joinChannel", "leaveChannel"]);
+        // Get Discord Voice module via webpackModules
+        const Voice = webpackModules.getByProps("joinChannel");
         if (!Voice) {
-            console.error("[ProximityVC] Could not find Voice module");
+            console.warn("[ProximityVC] Could not find Voice module");
             return;
         }
+        this.Voice = Voice;
 
-        this.VoiceModule = Voice;
-        originalJoinVC = Voice.joinChannel;
-
-        Voice.joinChannel = async (...args: any[]) => {
+        // Patch joinChannel using Vencord's built-in patch system
+        this.patch(this.Voice, "joinChannel", (args, res) => {
             const vcId = args[0];
             if (this.config.proximityVCIds.includes(vcId)) {
                 console.log(`[ProximityVC] Intercepting VC ${vcId}`);
                 this.showOverlay(vcId);
-                // TODO: Connect to WebRTC server
-                return;
+                return Promise.resolve(); // Prevent default VC join
             }
+            return res;
+        });
+    },
 
-            return originalJoinVC(...args);
-        };
+    stop() {
+        console.log("%c[ProximityVC]%c Plugin stopped", "color: red; font-weight: bold;", "");
+        // Patches are automatically cleaned up by Vencord
+        // TODO: remove overlay if needed
     },
 
     showOverlay(vcId: string) {
         ProximityVCOverlay.show(vcId, this.config);
-    }
+    },
 });
